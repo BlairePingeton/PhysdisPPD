@@ -1,0 +1,99 @@
+---
+title: "PPD PD"
+author: "Blaire Pingeton"
+date: "2024-01-29"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(metafor)
+library(readxl)
+library(tidyverse)
+library(meta)
+
+Disability1 <- read_excel("DataOct30.xlsx", sheet = "R Data")
+Disability1
+```
+
+
+Random effects meta-analysis
+```{r}
+meta1 <- rma(yi = `Cohen's d`, vi = `Variance`,
+             data=DataOct30, measure = "SMD")
+meta1
+
+forest(meta1, xlab="Standardized Mean Difference", 
+       slab = paste(DataOct30$`Study ID`), 
+       mlab = "Summary Effect Size", cex = 1,
+       header = "Author(s) and Year",
+       addpred = TRUE)
+
+png("forest_plot_revise.png", width = 1000, height = 800, res = 150)
+forest(meta1, xlab="Standardized Mean Difference", 
+       slab = paste(DataOct30$`Study ID`), 
+       mlab = "Summary Effect Size", cex = 1,
+       header = "Author(s) and Year",
+       addpred = TRUE)
+dev.off()
+
+```
+
+create funnel plot and test asymmetry of funnel plot
+```{r}
+funnel(meta1)
+regtest(meta1)
+funnel_plot <- funnel(meta1)
+ggsave("funnel_plot_revise.png", plot = funnel_plot)
+
+```
+p-value of regression test is not significant
+
+
+
+Calculate Rosenthal's failsafe N
+```{r}
+
+Z_score <- qnorm(1 - 0.05/2)
+k <- 13
+seTE <- .1541
+
+
+failsafe_N <- (Z_score^2 / seTE^2) - 13
+failsafe_N
+
+
+
+```
+Results indicate 149 additional needed to nullify results
+
+
+Test moderators
+```{r}
+metaregion <- rma(yi = `Cohen's d`, vi = `Variance`,
+             data=DataJan24, measure = "SMD", 
+             mods = Mod_region)
+metaregion
+metadepmeasure <- rma(yi = `Cohen's d`, vi = `Variance`,
+             data=DataJan24, measure = "SMD", 
+             mods = Mod_DepMeasure)
+metadepmeasure
+metaPDMeasure <- rma(yi = `Cohen's d`, vi = `Variance`,
+             data=DataJan24, measure = "SMD", 
+             mods = Mod_PDMeasure)
+metaPDMeasure
+metaGenPop <- rma(yi = `Cohen's d`, vi = `Variance`,
+             data=DataJan24, measure = "SMD", 
+             mods = Mod_Genpop)
+metaGenPop
+
+metaPDOp <- rma(yi = `Cohen's d`, vi = `Variance`,
+             data=DataJan24, measure = "SMD", 
+             mods = Mod_pdoperational)
+metaPDOp
+```
+
